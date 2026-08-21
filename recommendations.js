@@ -1,0 +1,4 @@
+﻿const NPRecommend=(()=>{function recommend(p){if(!p)return[];const band=ageToBand(p.age||8);const sup=p.support||2;const diff=p.difficulty||'medium';const skills=p.skills||[];let pool=NPCatalog.GAMES.filter(g=>g.ages.includes(band));if(skills.length)pool.sort((a,b)=>b.skills.filter(s=>skills.includes(s)).length-a.skills.filter(s=>skills.includes(s)).length);let sd=diff;if(sup>=4)sd='very_easy';else if(sup===3)sd=diff==='medium'?'easy':diff;else if(sup===1&&diff==='easy')sd='medium';return pool.slice(0,6).map(g=>({...g,suggestedDifficulty:sd}))}
+function adaptDifficulty(sid,gid,h){const r=h.filter(x=>x.gameId===gid).slice(-5);if(r.length<3)return null;const a=r.reduce((s,x)=>s+(x.score||0),0)/r.length;if(a>=.85)return'up';if(a<=.4)return'down';return'keep'}
+return{recommend,adaptDifficulty}})();
+window.NPRecommend=NPRecommend;

@@ -1,0 +1,16 @@
+﻿<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>NeuroPlay - Jogos</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+<link rel="stylesheet" href="../css/style.css"/><link rel="stylesheet" href="../css/accessibility.css"/><link rel="stylesheet" href="../css/responsive.css"/>
+</head><body><div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../js/storage.js"></script><script src="../js/accessibility.js"></script><script src="../js/app.js"></script><script>
+document.addEventListener('DOMContentLoaded',()=>{const p=NPStorage.getProfile()||{age:8};const band=ageToBand(p.age);const games=NPCatalog.getGamesForAge(band);
+const filters='<div class="np-card mb-4"><div class="d-flex flex-wrap gap-2 align-items-center"><strong><i class="bi bi-funnel"></i> Filtrar:</strong><select class="form-select form-select-sm" id="fCat" style="max-width:220px"><option value="">Todas categorias</option>'+NPCatalog.CATEGORIES.map(c=>'<option value="'+c.id+'">'+c.label+'</option>').join('')+'</select><select class="form-select form-select-sm" id="fAge" style="max-width:200px">'+NPCatalog.AGES.map(a=>'<option value="'+a.id+'" '+(a.id===band?'selected':'')+'>'+a.label+'</option>').join('')+'</select></div></div>';
+const grid=l=>l.length===0?'<div class="np-empty"><i class="bi bi-emoji-frown d-block mb-2"></i>Nenhum jogo.</div>':'<div class="np-game-grid">'+l.map(g=>'<a href="../'+g.href+'" class="np-game-card"><div class="np-game-icon" style="background:'+g.color+'">'+g.icon+'</div><strong>'+g.title+'</strong><small class="text-muted">'+(NPCatalog.CATEGORIES.find(c=>c.id===g.category)?.label||'')+'</small></a>').join('')+'</div>';
+const content=filters+'<div id="gg">'+grid(games)+'</div>';
+document.getElementById('app').innerHTML=NPApp.renderLayout('aluno','jogos.html','Jogos',content);NPApp.initSidebarToggle();
+const apply=()=>{const c=document.getElementById('fCat').value;const a=document.getElementById('fAge').value;let l=NPCatalog.getGamesForAge(a);if(c)l=l.filter(g=>g.category===c);document.getElementById('gg').innerHTML=grid(l)};
+document.getElementById('fCat').addEventListener('change',apply);document.getElementById('fAge').addEventListener('change',apply)});
+</script>
+</body></html>

@@ -1,0 +1,15 @@
+﻿const NPAccessibility=(()=>{const defaults={fontSize:16,highContrast:false,reduceMotion:false,sound:true,speech:false,largeButtons:false};
+const load=()=>({...defaults,...(NPStorage.getAccessibility()||{})});
+const save=(c)=>{NPStorage.setAccessibility(c);apply(c)};
+const apply=(c)=>{document.documentElement.style.setProperty('--np-font',c.fontSize+'px');document.body.style.fontSize=c.fontSize+'px';document.body.classList.toggle('high-contrast',!!c.highContrast);document.body.classList.toggle('reduce-motion',!!c.reduceMotion);document.body.classList.toggle('large-buttons',!!c.largeButtons)};
+const speak=(t)=>{const c=load();if(!c.speech||!('speechSynthesis' in window))return;try{window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='pt-BR';u.rate=.95;window.speechSynthesis.speak(u)}catch(e){}};
+const beep=(f=600,d=120,t='sine')=>{const c=load();if(!c.sound)return;try{const x=new (window.AudioContext||window.webkitAudioContext)();const o=x.createOscillator();const g=x.createGain();o.type=t;o.frequency.value=f;g.gain.value=.08;o.connect(g);g.connect(x.destination);o.start();setTimeout(()=>{o.stop();x.close()},d)}catch(e){}};
+const successSound=()=>{beep(800,120);setTimeout(()=>beep(1200,160),130)};
+const errorSound=()=>{beep(220,220,'sawtooth')};
+const clickSound=()=>{beep(500,60)};
+const bindPanel=()=>{const p=document.getElementById('accPanel');const f=document.getElementById('npFab');if(!p)return;const open=()=>p.hidden=false;const close=()=>p.hidden=true;document.querySelectorAll('[data-acc-panel]').forEach(b=>b.addEventListener('click',open));document.querySelectorAll('[data-acc-close]').forEach(b=>b.addEventListener('click',close));const c=load();const el=id=>document.getElementById(id);if(el('accFontSize'))el('accFontSize').value=c.fontSize;if(el('accHighContrast'))el('accHighContrast').checked=c.highContrast;if(el('accReduceMotion'))el('accReduceMotion').checked=c.reduceMotion;if(el('accSound'))el('accSound').checked=c.sound;if(el('accSpeech'))el('accSpeech').checked=c.speech;if(el('accLargeButtons'))el('accLargeButtons').checked=c.largeButtons;el('accSave')?.addEventListener('click',()=>{save({fontSize:+el('accFontSize').value,highContrast:el('accHighContrast').checked,reduceMotion:el('accReduceMotion').checked,sound:el('accSound').checked,speech:el('accSpeech').checked,largeButtons:el('accLargeButtons').checked});toast('Preferências salvas!');close()})};
+const toast=(m)=>{const t=document.createElement('div');t.className='np-toast';t.textContent=m;t.setAttribute('role','status');document.body.appendChild(t);setTimeout(()=>t.remove(),2400)};
+const feedback=(t)=>{const e=document.createElement('div');e.className='np-feedback';if(t==='success'){e.textContent='✨';successSound()}else if(t==='error'){e.textContent='❌';errorSound()}else if(t==='star'){e.textContent='⭐';successSound()}document.body.appendChild(e);setTimeout(()=>e.remove(),900)};
+document.addEventListener('DOMContentLoaded',()=>{apply(load());bindPanel()});
+return{load,save,apply,speak,beep,successSound,errorSound,clickSound,feedback,toast}})();
+window.NPAccessibility=NPAccessibility;

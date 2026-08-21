@@ -1,0 +1,12 @@
+﻿<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>NeuroPlay - Conquistas</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+<link rel="stylesheet" href="../css/style.css"/><link rel="stylesheet" href="../css/accessibility.css"/><link rel="stylesheet" href="../css/responsive.css"/>
+</head><body><div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../js/storage.js"></script><script src="../js/accessibility.js"></script><script src="../js/app.js"></script><script>
+document.addEventListener('DOMContentLoaded',()=>{const p=NPStorage.getProfile()||{id:'me',stars:0};const u=NPStorage.getAchievements(p.id)||[];const ids=new Set(u.map(a=>a.id));
+const content='<div class="np-card mb-4 text-center"><h2 class="h4"><i class="bi bi-trophy-fill text-np"></i> Conquistas</h2><p class="text-muted mb-0">'+u.length+' de '+NPCatalog.ACHIEVEMENTS.length+' desbloqueadas · '+(p.stars||0)+' estrelas</p></div><div class="row g-3">'+NPCatalog.ACHIEVEMENTS.map(a=>{const g=ids.has(a.id);return '<div class="col-6 col-md-4 col-lg-3"><div class="np-card text-center '+(g?'':'opacity-50')+'"><div style="font-size:2.5rem">'+(g?a.icon:'🔒')+'</div><strong class="d-block">'+a.title+'</strong><small class="text-muted">'+a.desc+'</small></div></div>'}).join('')+'</div>';
+document.getElementById('app').innerHTML=NPApp.renderLayout('aluno','conquistas.html','Conquistas',content);NPApp.initSidebarToggle()});
+</script>
+</body></html>

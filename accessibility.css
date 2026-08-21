@@ -1,0 +1,6 @@
+﻿body.high-contrast{--np-bg:#000;--np-surface:#111;--np-text:#fff;--np-muted:#ddd;--np-border:#fff;--np-purple:#ffeb3b;background:#000!important;color:#fff!important}
+body.high-contrast .np-topbar,body.high-contrast .np-sidebar,body.high-contrast .np-card,body.high-contrast .np-profile-card,body.high-contrast .np-game-card,body.high-contrast .np-stat,body.high-contrast .np-acc-panel-inner,body.high-contrast .np-modal{background:#111!important;color:#fff!important;border-color:#fff!important}
+body.high-contrast a,body.high-contrast button{color:#ffeb3b!important}body.high-contrast .btn-np{background:#ffeb3b!important;color:#000!important}
+body.reduce-motion *,body.reduce-motion *::before,body.reduce-motion *::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
+body.large-buttons .btn,body.large-buttons button,body.large-buttons .np-game-card,body.large-buttons .np-profile-card{min-height:56px}
+*:focus-visible{outline:3px solid var(--np-purple)!important;outline-offset:2px!important;border-radius:4px}

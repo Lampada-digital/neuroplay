@@ -1,0 +1,30 @@
+﻿<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>NeuroPlay - Memória</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+<link rel="stylesheet" href="../css/style.css"/><link rel="stylesheet" href="../css/accessibility.css"/>
+<link rel="stylesheet" href="../css/responsive.css"/><link rel="stylesheet" href="../css/games.css"/>
+</head><body><div class="container py-4"><a href="../pages/jogos.html" class="btn btn-ghost mb-3"><i class="bi bi-arrow-left"></i> Voltar</a><div id="gameRoot"></div></div>
+<script src="../js/storage.js"></script><script src="../js/accessibility.js"></script><script src="../js/app.js"></script>
+<script>const EMOJIS=['🍎','🍌','🍇','🍓','🍊','🥝','🍉','🍍','🥥','🍒','🥭','🍑','🐶','🐱','🐭','🐰','🦊','🐻'];
+const DIFFS={very_easy:{pairs:4,cols:4},easy:{pairs:6,cols:4},medium:{pairs:8,cols:4},hard:{pairs:10,cols:5},advanced:{pairs:12,cols:6}};
+let S={flipped:[],matched:0,total:0,score:0,locked:false,start:0,timer:null,diff:'medium',support:2};
+function init(){const p=NPStorage.getProfile()||{};S.diff=p.difficulty||'medium';S.support=p.support||2;
+document.getElementById('gameRoot').innerHTML='<div class="np-game-wrap"><div class="np-game-header"><div><h1 class="h4 mb-1">🧠 Jogo da Memória</h1><p class="text-muted mb-0" id="ins">Encontre todos os pares.</p></div><div class="np-game-stats"><div class="np-game-stat"><i class="bi bi-star-fill np-star"></i> <span id="sc">0</span></div><div class="np-game-stat"><i class="bi bi-clock"></i> <span id="tm">0s</span></div><div class="np-game-stat"><i class="bi bi-layers"></i> <span id="pr">0</span>/<span id="tp">0</span></div></div></div><div class="d-flex gap-2 mb-3 flex-wrap"><select class="form-select form-select-sm" id="ds" style="max-width:180px"></select><select class="form-select form-select-sm" id="ss" style="max-width:220px"></select><button class="btn btn-np" id="rs"><i class="bi bi-arrow-clockwise"></i> Reiniciar</button></div><div class="memory-grid" id="gr"></div></div>';
+const ds=document.getElementById('ds'),ss=document.getElementById('ss');
+NPCatalog.DIFFICULTIES.forEach(d=>ds.insertAdjacentHTML('beforeend','<option value="'+d.id+'" '+(d.id===S.diff?'selected':'')+'>'+d.label+'</option>'));
+NPCatalog.SUPPORTS.forEach(s=>ss.insertAdjacentHTML('beforeend','<option value="'+s.id+'" '+(s.id===S.support?'selected':'')+'>'+s.label+'</option>'));
+ds.addEventListener('change',e=>{S.diff=e.target.value;start()});ss.addEventListener('change',e=>{S.support=+e.target.value;start()});document.getElementById('rs').addEventListener('click',start);start()}
+function start(){clearInterval(S.timer);const c=DIFFS[S.diff];const pool=EMOJIS.slice(0,c.pairs);const cards=[...pool,...pool].sort(()=>Math.random()-.5);S.flipped=[];S.matched=0;S.total=c.pairs;S.score=0;S.locked=false;S.start=Date.now();
+document.getElementById('sc').textContent=0;document.getElementById('pr').textContent=0;document.getElementById('tp').textContent=c.pairs;
+const gr=document.getElementById('gr');gr.style.gridTemplateColumns='repeat('+c.cols+',1fr)';
+gr.innerHTML=cards.map((e,i)=>'<button class="memory-card" data-i="'+i+'" data-e="'+e+'"><span class="back">?</span><span class="front" hidden>'+e+'</span></button>').join('');
+gr.querySelectorAll('.memory-card').forEach(c=>c.addEventListener('click',()=>flip(c)));
+S.timer=setInterval(()=>{document.getElementById('tm').textContent=Math.floor((Date.now()-S.start)/1000)+'s'},500);
+NPAccessibility.speak('Encontre todos os pares iguais.')}
+function flip(card){if(S.locked||card.classList.contains('flipped')||card.classList.contains('matched'))return;NPAccessibility.clickSound();card.classList.add('flipped');card.querySelector('.back').hidden=true;card.querySelector('.front').hidden=false;S.flipped.push(card);
+if(S.flipped.length===2){S.locked=true;const[a,b]=S.flipped;if(a.dataset.e===b.dataset.e){setTimeout(()=>{a.classList.add('matched');b.classList.add('matched');S.matched++;S.score+=10;document.getElementById('pr').textContent=S.matched;document.getElementById('sc').textContent=S.score;NPAccessibility.feedback('success');S.flipped=[];S.locked=false;if(S.matched===S.total)win()},S.support>=3?900:500)}else{setTimeout(()=>{[a,b].forEach(c=>{c.classList.remove('flipped');c.querySelector('.back').hidden=false;c.querySelector('.front').hidden=true});S.flipped=[];S.locked=false;NPAccessibility.feedback('error')},S.support>=3?1400:800)}}}
+function win(){clearInterval(S.timer);const d=Date.now()-S.start;NPAccessibility.feedback('star');NPAccessibility.speak('Parabéns! Você encontrou todos os pares!');
+const p=NPStorage.getProfile();if(p){NPStorage.addProgress(p.id,{gameId:'memoria',score:100,duration:d,difficulty:S.diff});p.stars=(p.stars||0)+3;NPStorage.setProfile(p);const ac=NPStorage.getAchievements(p.id);if(!ac.find(a=>a.id==='first_game'))NPStorage.addAchievement(p.id,NPCatalog.ACHIEVEMENTS.find(a=>a.id==='first_game'));if(NPStorage.getProgress(p.id).filter(x=>x.gameId==='memoria').length>=5&&!ac.find(a=>a.id==='memory_master'))NPStorage.addAchievement(p.id,NPCatalog.ACHIEVEMENTS.find(a=>a.id==='memory_master'))}
+setTimeout(()=>{alert('🎉 Parabéns!\\nTempo: '+Math.round(d/1000)+'s\\nPontos: '+S.score+'\\nEstrelas: 3 ⭐')},400)}
+document.addEventListener('DOMContentLoaded',init);</script>
+</body></html>

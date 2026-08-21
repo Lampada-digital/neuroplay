@@ -1,0 +1,70 @@
+﻿<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Memória</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link rel="stylesheet" href="../css/style.css"/><link rel="stylesheet" href="../css/games.css"/><link rel="stylesheet" href="../css/accessibility.css"/>
+</head><body>
+<div class="game-container">
+  <a href="../pages/aluno/games.html" class="btn btn-ghost mb-3">← Voltar</a>
+  <div class="game-header">
+    <div><h1 class="game-title">🧠 Memória</h1><p class="text-muted mb-0">Encontre os pares</p></div>
+    <div class="game-stats"><div class="game-stat">⭐ <span id="score">0</span></div><div class="game-stat">⏱ <span id="time">0s</span></div><div class="game-stat"><span id="pairs">0</span>/<span id="total">0</span></div></div>
+  </div>
+  <div class="game-board">
+    <div class="game-controls mb-3"><select class="form-control" id="diff" style="max-width:200px"><option value="4">Fácil (4)</option><option value="6" selected>Médio (6)</option><option value="8">Difícil (8)</option></select><button class="btn btn-primary" id="restart">Reiniciar</button></div>
+    <div class="memory-grid" id="grid"></div>
+  </div>
+</div>
+<script src="../js/storage.js"></script><script src="../js/auth.js"></script><script src="../js/accessibility.js"></script><script src="../js/app.js"></script>
+<script>
+var EMOJIS=['🍎','🍌','🍇','🍓','🍊','🥝','🍉','🍍','🐶','🐱','🐭','🐰','🦊','🐻','🐼','🐨'];
+var S={flipped:[],matched:0,total:0,score:0,locked:false,start:0,timer:null};
+function start(){
+  clearInterval(S.timer);
+  var n=+document.getElementById('diff').value;
+  var pool=EMOJIS.slice(0,n);
+  var cards=pool.concat(pool).sort(function(){return Math.random()-.5});
+  S={flipped:[],matched:0,total:n,score:0,locked:false,start:Date.now(),timer:null};
+  document.getElementById('score').textContent=0;
+  document.getElementById('pairs').textContent=0;
+  document.getElementById('total').textContent=n;
+  var grid=document.getElementById('grid');
+  grid.style.gridTemplateColumns='repeat(4,1fr)';
+  var html='';
+  cards.forEach(function(e,i){html+='<button class="memory-card" data-i="'+i+'" data-e="'+e+'"><span class="back">?</span><span class="front" hidden>'+e+'</span></button>'});
+  grid.innerHTML=html;
+  grid.querySelectorAll('.memory-card').forEach(function(c){c.addEventListener('click',function(){flip(c)})});
+  S.timer=setInterval(function(){document.getElementById('time').textContent=Math.floor((Date.now()-S.start)/1000)+'s'},500);
+}
+function flip(card){
+  if(S.locked||card.classList.contains('flipped')||card.classList.contains('matched'))return;
+  NPAccess.playSound('click');
+  card.classList.add('flipped');
+  card.querySelector('.back').hidden=true;
+  card.querySelector('.front').hidden=false;
+  S.flipped.push(card);
+  if(S.flipped.length===2){
+    S.locked=true;
+    var a=S.flipped[0],b=S.flipped[1];
+    if(a.dataset.e===b.dataset.e){
+      setTimeout(function(){a.classList.add('matched');b.classList.add('matched');S.matched++;S.score+=10;document.getElementById('pairs').textContent=S.matched;document.getElementById('score').textContent=S.score;NPAccess.feedback('success');S.flipped=[];S.locked=false;if(S.matched===S.total)win()},500);
+    }else{
+      setTimeout(function(){[a,b].forEach(function(c){c.classList.remove('flipped');c.querySelector('.back').hidden=false;c.querySelector('.front').hidden=true});S.flipped=[];S.locked=false;NPAccess.feedback('error')},900);
+    }
+  }
+}
+function win(){
+  clearInterval(S.timer);
+  var u=NPAuth.getCurrent();
+  if(u){
+    NPStorage.addProgress(u.id,{gameId:'memoria',score:100,duration:Date.now()-S.start});
+    var st=NPStorage.getStudent(u.id);
+    if(st){st.stars=(st.stars||0)+3;st.xp=(st.xp||0)+50;NPStorage.updateStudent(u.id,st)}
+    var ac=NPStorage.getAchievements(u.id);
+    if(!ac.find(function(a){return a.id==='first_game'}))NPStorage.addAchievement(u.id,NPCatalog.ACHIEVEMENTS.find(function(a){return a.id==='first_game'}));
+  }
+  NPAccess.feedback('star');
+  setTimeout(function(){alert('🎉 Parabéns!\nPontos: '+S.score+'\nTempo: '+Math.floor((Date.now()-S.start)/1000)+'s\nEstrelas: 3 ⭐');location.reload()},400);
+}
+document.getElementById('diff').addEventListener('change',start);
+document.getElementById('restart').addEventListener('click',start);
+start();
+</script></body></html>

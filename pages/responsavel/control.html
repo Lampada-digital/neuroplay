@@ -1,0 +1,11 @@
+﻿<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Controle</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link rel="stylesheet" href="../../css/style.css"/><link rel="stylesheet" href="../../css/dashboard.css"/><link rel="stylesheet" href="../../css/accessibility.css"/>
+</head><body><div id="app"></div>
+<script src="../../js/storage.js"></script><script src="../../js/auth.js"></script><script src="../../js/accessibility.js"></script><script src="../../js/app.js"></script>
+<script>
+if(!NPAuth.isLoggedIn())location.href='../auth/login.html';
+var content='<div class="card text-center" style="padding:3rem"><h3>Controle</h3><p class="text-muted mt-2">Em breve!</p><a href="dashboard.html" class="btn btn-primary">Voltar</a></div>';
+document.getElementById('app').innerHTML=NPApp.renderLayout('parent','control.html','Controle',content);
+document.getElementById('menuToggle').addEventListener('click',function(){document.getElementById('sidebar').classList.toggle('open')});
+</script></body></html>

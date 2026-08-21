@@ -1,0 +1,66 @@
+﻿<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Ritmo</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link rel="stylesheet" href="../css/style.css"/><link rel="stylesheet" href="../css/accessibility.css"/>
+</head><body>
+<div class="container py-4">
+  <a href="../pages/aluno/music.html" class="btn btn-ghost mb-3">← Voltar</a>
+  <div class="card text-center">
+    <h2>🥁 Repita o Ritmo</h2>
+    <p class="text-muted">Ouça e repita</p>
+    <div class="mt-4"><div class="badge badge-primary">Nível <span id="level">1</span></div></div>
+    <div id="status" style="font-size:2rem;margin:2rem 0;color:var(--np-primary);font-weight:700">Ouça...</div>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap" id="pads"></div>
+  </div>
+</div>
+<script src="../js/storage.js"></script><script src="../js/auth.js"></script><script src="../js/accessibility.js"></script><script src="../js/app.js"></script>
+<script>
+var level=1,sequence=[],input=[],playing=false;
+var pads=['🔴','🟢','🔵','🟡'];
+var freqs=[300,400,500,600];
+var padsHtml='';
+pads.forEach(function(p,i){padsHtml+='<button class="btn btn-lg" data-i="'+i+'" style="width:100px;height:100px;font-size:3rem;border-radius:50%">'+p+'</button>'});
+document.getElementById('pads').innerHTML=padsHtml;
+var ctx;
+function getCtx(){if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();return ctx}
+function play(i){
+  var c=getCtx();var o=c.createOscillator();var g=c.createGain();
+  o.frequency.value=freqs[i];g.gain.value=.2;
+  o.connect(g);g.connect(c.destination);o.start();setTimeout(function(){o.stop();c.close()},200);
+}
+function nextRound(){
+  sequence=[];
+  for(var i=0;i<level+2;i++)sequence.push(Math.floor(Math.random()*4));
+  input=[];playSequence();
+}
+function playSequence(){
+  playing=true;document.getElementById('status').textContent='Ouça...';
+  var i=0;
+  var iv=setInterval(function(){
+    if(i>=sequence.length){clearInterval(iv);playing=false;document.getElementById('status').textContent='Sua vez!';return}
+    play(sequence[i]);
+    var btn=document.querySelectorAll('#pads button')[sequence[i]];
+    btn.style.transform='scale(1.1)';setTimeout(function(){btn.style.transform=''},200);
+    i++;
+  },700);
+}
+document.querySelectorAll('#pads button').forEach(function(b){b.addEventListener('click',function(){
+  if(playing)return;
+  var i=+b.dataset.i;input.push(i);play(i);
+  b.style.transform='scale(.9)';setTimeout(function(){b.style.transform=''},100);
+  var idx=input.length-1;
+  if(input[idx]!==sequence[idx]){
+    document.getElementById('status').textContent='Ops!';NPAccess.feedback('error');
+    setTimeout(function(){level=1;document.getElementById('level').textContent=level;nextRound()},1500);return;
+  }
+  if(input.length===sequence.length){
+    NPAccess.feedback('success');level++;document.getElementById('level').textContent=level;
+    if(level>5){
+      var u=NPAuth.getCurrent();
+      if(u){NPStorage.addProgress(u.id,{gameId:'rhythm',score:100,duration:0});var st=NPStorage.getStudent(u.id);if(st){st.stars=(st.stars||0)+3;st.xp=(st.xp||0)+60;NPStorage.updateStudent(u.id,st)}}
+      NPAccess.feedback('star');alert('🎉 Parabéns!\nEstrelas: 3 ⭐');level=1;document.getElementById('level').textContent=level;
+    }
+    setTimeout(nextRound,1000);
+  }
+})});
+nextRound();
+</script></body></html>

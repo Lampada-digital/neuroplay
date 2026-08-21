@@ -1,0 +1,53 @@
+﻿<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Digitação 3</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link rel="stylesheet" href="../css/style.css"/><link rel="stylesheet" href="../css/accessibility.css"/>
+<style>
+.target-word{font-size:3rem;text-align:center;color:var(--np-primary);font-weight:800;margin:2rem 0;letter-spacing:.5rem;font-family:monospace}
+.input-word{font-size:2rem;text-align:center;font-family:monospace;padding:1rem;background:var(--np-bg);border-radius:var(--np-radius);margin:1rem 0;min-height:80px}
+.char{display:inline-block;padding:.25rem .5rem;margin:0 .125rem;border-radius:4px}
+.char.correct{background:rgba(0,184,148,.2);color:var(--np-success)}
+.char.wrong{background:rgba(225,112,85,.2);color:var(--np-danger)}
+.char.current{background:var(--np-primary);color:white}
+</style>
+</head><body>
+<div class="container py-4">
+  <a href="../pages/aluno/typing.html" class="btn btn-ghost mb-3">← Voltar</a>
+  <div class="card text-center">
+    <h2>⌨️ Nível 3 - Frases curtas</h2>
+    <p class="text-muted">Digite o que aparece</p>
+    <div class="flex-between mt-3" style="max-width:400px;margin:0 auto">
+      <div class="badge badge-primary">Acertos: <span id="hits">0</span></div>
+      <div class="badge badge-warning">Erros: <span id="miss">0</span></div>
+    </div>
+    <div class="target-word" id="target"></div>
+    <div class="input-word" id="input"></div>
+    <p class="text-muted">Comece a digitar...</p>
+  </div>
+</div>
+<script src="../js/storage.js"></script><script src="../js/auth.js"></script><script src="../js/accessibility.js"></script><script src="../js/app.js"></script>
+<script>
+var WORDS=['O SOL BRILHA','EU AMO MAE','O GATO MIA','A CASA E BELA'];
+var current='',typed='',hits=0,miss=0;
+function newWord(){current=WORDS[Math.floor(Math.random()*WORDS.length)];typed='';document.getElementById('target').textContent=current;renderInput()}
+function renderInput(){var html='';for(var i=0;i<current.length;i++){var cl='char';if(i<typed.length)cl+=typed[i]===current[i]?' correct':' wrong';else if(i===typed.length)cl+=' current';html+='<span class="'+cl+'">'+(typed[i]||current[i])+'</span>'}document.getElementById('input').innerHTML=html}
+document.addEventListener('keydown',function(e){
+  if(e.key==='Backspace'){if(typed.length>0){typed=typed.slice(0,-1);renderInput()}e.preventDefault();return}
+  if(e.key.length!==1)return;
+  var k=e.key.toUpperCase();
+  if(typed.length>=current.length)return;
+  typed+=k;NPAccess.playSound('click');renderInput();
+  if(typed.length===current.length){
+    var correct=typed===current;
+    if(correct){hits++;document.getElementById('hits').textContent=hits;NPAccess.feedback('success');if(hits>=5)win();else setTimeout(newWord,800)}
+    else{miss++;document.getElementById('miss').textContent=miss;NPAccess.feedback('error');typed='';setTimeout(renderInput,500)}
+  }
+});
+function win(){
+  var u=NPAuth.getCurrent();
+  if(u){NPStorage.addProgress(u.id,{gameId:'typing_3',score:100,duration:0});var st=NPStorage.getStudent(u.id);if(st){st.stars=(st.stars||0)+2;st.xp=(st.xp||0)+30;NPStorage.updateStudent(u.id,st)}}
+  NPAccess.feedback('star');
+  alert('🎉 Nível 3 completo!\nAcertos: '+hits+'\nEstrelas: 2 ⭐');
+  location.href='../pages/aluno/typing.html';
+}
+newWord();
+</script></body></html>

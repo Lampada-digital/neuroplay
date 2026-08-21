@@ -1,0 +1,66 @@
+﻿<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Instrumentos</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link rel="stylesheet" href="../css/style.css"/><link rel="stylesheet" href="../css/accessibility.css"/>
+<style>
+.instruments{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2rem;max-width:900px;margin:2rem auto}
+.instrument{background:var(--np-surface);border-radius:24px;padding:2rem;text-align:center;box-shadow:var(--np-shadow);cursor:pointer;transition:var(--np-transition);border:3px solid transparent}
+.instrument:hover{transform:translateY(-8px);box-shadow:var(--np-shadow-lg);border-color:var(--np-primary)}
+.instrument:active{transform:scale(.95)}
+.instrument-icon{font-size:5rem;margin-bottom:1rem}
+.instrument-name{font-size:1.25rem;font-weight:700}
+.piano{display:flex;gap:2px;max-width:800px;margin:2rem auto;height:200px}
+.piano-key{flex:1;background:white;border:2px solid var(--np-border);border-radius:0 0 8px 8px;cursor:pointer;transition:var(--np-transition);display:flex;align-items:flex-end;justify-content:center;padding-bottom:1rem;font-weight:700}
+.piano-key:hover{background:var(--np-bg)}
+.piano-key:active,.piano-key.active{background:var(--np-primary);color:white}
+</style>
+</head><body>
+<div class="container py-4">
+  <a href="../pages/aluno/music.html" class="btn btn-ghost mb-3">← Voltar</a>
+  <div class="card text-center"><h2>🎹 Meus Instrumentos</h2><p class="text-muted">Clique para tocar!</p></div>
+  <div class="piano" id="piano"></div>
+  <div class="instruments" id="instruments"></div>
+</div>
+<script src="../js/storage.js"></script><script src="../js/auth.js"></script><script src="../js/accessibility.js"></script><script src="../js/app.js"></script>
+<script>
+var NOTES=[{n:'DÓ',f:261.63,k:'a'},{n:'RÉ',f:293.66,k:'s'},{n:'MI',f:329.63,k:'d'},{n:'FÁ',f:349.23,k:'f'},{n:'SOL',f:392,k:'g'},{n:'LÁ',f:440,k:'h'},{n:'SI',f:493.88,k:'j'},{n:'DÓ',f:523.25,k:'k'}];
+var INSTRUMENTS=[{name:'Piano',icon:'🎹',type:'piano'},{name:'Bateria',icon:'🥁',type:'drum'},{name:'Violão',icon:'🎸',type:'guitar'},{name:'Sinos',icon:'🔔',type:'bell'}];
+var ctx;
+function getCtx(){if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();return ctx}
+function playNote(freq,dur,type){
+  var c=getCtx();var o=c.createOscillator();var g=c.createGain();
+  o.type=type||'sine';o.frequency.value=freq;
+  g.gain.setValueAtTime(.3,c.currentTime);g.gain.exponentialRampToValueAtTime(.01,c.currentTime+dur);
+  o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+dur);
+}
+function playDrum(){
+  var c=getCtx();var o=c.createOscillator();var g=c.createGain();
+  o.frequency.setValueAtTime(150,c.currentTime);o.frequency.exponentialRampToValueAtTime(.01,c.currentTime+.2);
+  g.gain.setValueAtTime(.5,c.currentTime);g.gain.exponentialRampToValueAtTime(.01,c.currentTime+.2);
+  o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.2);
+}
+var pianoHtml='';
+NOTES.forEach(function(n,i){pianoHtml+='<div class="piano-key" data-i="'+i+'">'+n.n+'</div>'});
+document.getElementById('piano').innerHTML=pianoHtml;
+document.querySelectorAll('.piano-key').forEach(function(k,i){
+  k.addEventListener('click',function(){playNote(NOTES[i].f,.8);k.classList.add('active');setTimeout(function(){k.classList.remove('active')},200)});
+});
+document.addEventListener('keydown',function(e){
+  var idx=-1;
+  for(var i=0;i<NOTES.length;i++){if(NOTES[i].k===e.key.toLowerCase()){idx=i;break}}
+  if(idx>=0){playNote(NOTES[idx].f,.8);document.querySelectorAll('.piano-key')[idx].classList.add('active');setTimeout(function(){document.querySelectorAll('.piano-key')[idx].classList.remove('active')},200)}
+});
+var instHtml='';
+INSTRUMENTS.forEach(function(i){instHtml+='<div class="instrument" data-type="'+i.type+'"><div class="instrument-icon">'+i.icon+'</div><div class="instrument-name">'+i.name+'</div></div>'});
+document.getElementById('instruments').innerHTML=instHtml;
+document.querySelectorAll('.instrument').forEach(function(el){
+  el.addEventListener('click',function(){
+    var t=el.dataset.type;
+    if(t==='piano')playNote(440,.5);
+    else if(t==='drum')playDrum();
+    else if(t==='guitar')playNote(330,.6,'triangle');
+    else if(t==='bell')playNote(880,1,'sine');
+    el.style.transform='scale(.95)';setTimeout(function(){el.style.transform=''},200);
+    NPAccess.playSound('click');
+  });
+});
+</script></body></html>

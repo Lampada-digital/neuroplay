@@ -1,0 +1,80 @@
+﻿<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Sequência</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link rel="stylesheet" href="../css/style.css"/><link rel="stylesheet" href="../css/games.css"/><link rel="stylesheet" href="../css/accessibility.css"/>
+</head><body>
+<div class="game-container">
+  <a href="../pages/aluno/games.html" class="btn btn-ghost mb-3">← Voltar</a>
+  <div class="game-header">
+    <div><h1 class="game-title" id="title">🎨 Sequência</h1><p class="text-muted mb-0" id="instr">Observe e repita</p></div>
+    <div class="game-stats"><div class="game-stat">Nível <span id="level">1</span></div><div class="game-stat">⭐ <span id="score">0</span></div></div>
+  </div>
+  <div class="game-board">
+    <div id="status" class="text-center fs-4 fw-bold my-3">Observando...</div>
+    <div id="pad"></div>
+  </div>
+</div>
+<script src="../js/storage.js"></script><script src="../js/auth.js"></script><script src="../js/accessibility.js"></script><script src="../js/app.js"></script>
+<script>
+var mode=new URLSearchParams(location.search).get('mode')||'colors';
+var S={level:1,score:0,seq:[],input:[],playing:false};
+if(mode==='numbers'){document.getElementById('title').textContent='🔢 Sequência Numérica';document.getElementById('instr').textContent='Memorize os números'}
+function buildPad(){
+  var pad=document.getElementById('pad');
+  if(mode==='colors'){
+    pad.innerHTML='<div class="sequence-pad"><button class="seq-btn" data-c="red"></button><button class="seq-btn" data-c="green"></button><button class="seq-btn" data-c="yellow"></button><button class="seq-btn" data-c="blue"></button></div>';
+    pad.querySelectorAll('.seq-btn').forEach(function(b){b.addEventListener('click',function(){onInput(b.dataset.c)})});
+  }else{
+    var html='<div class="math-options">';
+    for(var n=1;n<=9;n++)html+='<button class="math-option" data-n="'+n+'">'+n+'</button>';
+    html+='</div>';
+    pad.innerHTML=html;
+    pad.querySelectorAll('.math-option').forEach(function(b){b.addEventListener('click',function(){onInput(+b.dataset.n)})});
+  }
+}
+function nextRound(){
+  var len=2+S.level-1;
+  S.seq=[];
+  for(var i=0;i<len;i++)S.seq.push(mode==='colors'?['red','green','yellow','blue'][Math.floor(Math.random()*4)]:Math.floor(Math.random()*9)+1);
+  S.input=[];
+  playSeq();
+}
+function playSeq(){
+  S.playing=true;
+  document.getElementById('status').textContent='Observando...';
+  var i=0;
+  var iv=setInterval(function(){
+    if(i>=S.seq.length){clearInterval(iv);S.playing=false;document.getElementById('status').textContent='Sua vez!';return}
+    var v=S.seq[i];
+    var el=mode==='colors'?document.querySelector('.seq-btn[data-c="'+v+'"]'):document.querySelector('[data-n="'+v+'"]');
+    if(el){el.classList.add('active');NPAccess.playSound('click');setTimeout(function(){el.classList.remove('active')},400)}
+    i++;
+  },700);
+}
+function onInput(v){
+  if(S.playing)return;
+  var exp=S.seq[S.input.length];
+  S.input.push(v);
+  var el=mode==='colors'?document.querySelector('.seq-btn[data-c="'+v+'"]'):document.querySelector('[data-n="'+v+'"]');
+  if(el){el.classList.add('active');setTimeout(function(){el.classList.remove('active')},200)}
+  if(v!==exp){NPAccess.feedback('error');document.getElementById('status').textContent='Ops!';setTimeout(function(){S.level=1;S.score=0;document.getElementById('score').textContent=0;document.getElementById('level').textContent=1;nextRound()},1500);return}
+  if(S.input.length===S.seq.length){
+    S.score+=10*S.level;
+    document.getElementById('score').textContent=S.score;
+    S.level++;
+    document.getElementById('level').textContent=S.level;
+    NPAccess.feedback('success');
+    if(S.level>6)win();
+    else{document.getElementById('status').textContent='Muito bem!';setTimeout(nextRound,1200)}
+  }
+}
+function win(){
+  var u=NPAuth.getCurrent();
+  if(u){NPStorage.addProgress(u.id,{gameId:'sequencia_'+mode,score:100,duration:0});var st=NPStorage.getStudent(u.id);if(st){st.stars=(st.stars||0)+3;st.xp=(st.xp||0)+60;NPStorage.updateStudent(u.id,st)}}
+  NPAccess.feedback('star');
+  alert('🎉 Parabéns!\nPontos: '+S.score+'\nEstrelas: 3 ⭐');
+  S.level=1;S.score=0;document.getElementById('score').textContent=0;document.getElementById('level').textContent=1;
+  nextRound();
+}
+buildPad();
+nextRound();
+</script></body></html>

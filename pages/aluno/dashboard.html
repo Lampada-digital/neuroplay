@@ -1,0 +1,41 @@
+﻿<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>NEUROPLAY - Início</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+<link rel="stylesheet" href="../../css/style.css"/><link rel="stylesheet" href="../../css/dashboard.css"/><link rel="stylesheet" href="../../css/accessibility.css"/>
+</head><body><div id="app"></div>
+<script src="../../js/storage.js"></script>
+<script src="../../js/auth.js"></script>
+<script src="../../js/accessibility.js"></script>
+<script src="../../js/app.js"></script>
+<script>
+if(!NPAuth.isLoggedIn())location.href='../auth/login.html';
+var user=NPAuth.getCurrent();
+var student=NPStorage.getStudent(user.id)||{age:8,stars:0,xp:0,level:1,avatar:'🦊'};
+var progress=NPStorage.getProgress(user.id);
+var achievements=NPStorage.getAchievements(user.id);
+var recs=NPCatalog.getGamesForAge(ageToBand(student.age||8)).slice(0,6);
+
+var content='<div class="welcome-banner"><div><h2>Olá, '+user.name+'! 👋</h2><p>Qual aventura você quer explorar hoje?</p></div><div class="avatar-large">'+(student.avatar||'🦊')+'</div></div>';
+content+='<div class="stats-grid">';
+content+='<div class="stat-card"><div class="stat-icon purple">⭐</div><div class="stat-content"><h3>'+(student.stars||0)+'</h3><p>Estrelas</p></div></div>';
+content+='<div class="stat-card"><div class="stat-icon green">⚡</div><div class="stat-content"><h3>'+(student.xp||0)+'</h3><p>XP</p></div></div>';
+content+='<div class="stat-card"><div class="stat-icon blue">🏆</div><div class="stat-content"><h3>'+achievements.length+'</h3><p>Conquistas</p></div></div>';
+content+='<div class="stat-card"><div class="stat-icon orange">✓</div><div class="stat-content"><h3>'+progress.length+'</h3><p>Atividades</p></div></div>';
+content+='</div>';
+content+='<h3 style="margin-bottom:1rem">🗺️ Escolha sua aventura</h3>';
+content+='<div class="areas-grid">';
+content+='<a href="games.html" class="area-card"><span class="area-icon">🎮</span><div class="area-title">Jogos</div><div class="area-desc">15+ jogos</div></a>';
+content+='<a href="reading.html" class="area-card"><span class="area-icon">📚</span><div class="area-title">Biblioteca</div><div class="area-desc">Histórias</div></a>';
+content+='<a href="typing.html" class="area-card"><span class="area-icon">⌨️</span><div class="area-title">Digitação</div><div class="area-desc">Aprenda</div></a>';
+content+='<a href="music.html" class="area-card"><span class="area-icon">🎵</span><div class="area-title">Música</div><div class="area-desc">Instrumentos</div></a>';
+content+='<a href="animals.html" class="area-card"><span class="area-icon">🐶</span><div class="area-title">Animais</div><div class="area-desc">Mundo animal</div></a>';
+content+='<a href="achievements.html" class="area-card"><span class="area-icon">🏆</span><div class="area-title">Conquistas</div><div class="area-desc">Medalhas</div></a>';
+content+='</div>';
+content+='<h3 style="margin:2rem 0 1rem">⭐ Recomendados</h3>';
+content+='<div class="areas-grid">';
+recs.forEach(function(g){content+='<a href="../../'+g.href+'" class="area-card"><span class="area-icon">'+g.icon+'</span><div class="area-title">'+g.title+'</div><div class="area-desc">'+g.skills.join(', ')+'</div></a>'});
+content+='</div>';
+
+document.getElementById('app').innerHTML=NPApp.renderLayout('aluno','dashboard.html','Minha Jornada',content);
+document.getElementById('menuToggle').addEventListener('click',function(){document.getElementById('sidebar').classList.toggle('open')});
+</script></body></html>
